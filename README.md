@@ -1,220 +1,140 @@
-srsLTE
-========
+srsLTE-modified
+=====
 
-[![Build Status](https://travis-ci.org/srsLTE/srsLTE.svg?branch=master)](https://travis-ci.org/srsLTE/srsLTE)
-[![Language grade: C/C++](https://img.shields.io/lgtm/grade/cpp/g/srsLTE/srsLTE.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/srsLTE/srsLTE/context:cpp)
-[![Coverity](https://scan.coverity.com/projects/10045/badge.svg)](https://scan.coverity.com/projects/srslte)
+Modified version of the [srsLTE software](https://github.com/srsLTE/srsLTE) in order to extract the channel frequency response estimate (i.e. the CSI), as well as other features (RSSI, RSRQ, ...)
 
-srsLTE is a free and open-source LTE software suite developed by SRS (www.softwareradiosystems.com). 
-See the srsLTE project pages (www.srslte.com) for documentation, guides and project news.
+---
 
-It includes:
-  * srsUE - a complete SDR LTE UE application featuring all layers from PHY to IP
-  * srsENB - a complete SDR LTE eNodeB application 
-  * srsEPC - a light-weight LTE core network implementation with MME, HSS and S/P-GW
-  * a highly modular set of common libraries for PHY, MAC, RLC, PDCP, RRC, NAS, S1AP and GW layers. 
+# How to install
 
-srsLTE is released under the AGPLv3 license and uses software from the OpenLTE project (http://sourceforge.net/projects/openlte) for some security functions and for NAS message parsing.
+Tried with Ubuntu 16.04 and CMake 3.5.1
 
-Common Features
----------------
+- Disable CPU frequency scaling:
 
- * LTE Release 10 aligned
- * Tested bandwidths: 1.4, 3, 5, 10, 15 and 20 MHz
- * Transmission mode 1 (single antenna), 2 (transmit diversity), 3 (CCD) and 4 (closed-loop spatial multiplexing)
- * Frequency-based ZF and MMSE equalizer
- * Evolved multimedia broadcast and multicast service (eMBMS)
- * Highly optimized Turbo Decoder available in Intel SSE4.1/AVX2 (+100 Mbps) and standard C (+25 Mbps)
- * MAC, RLC, PDCP, RRC, NAS, S1AP and GW layers
- * Detailed log system with per-layer log levels and hex dumps
- * MAC layer wireshark packet capture
- * Command-line trace metrics
- * Detailed input configuration files
- * Channel simulator for EPA, EVA, and ETU 3GPP channels
- * ZeroMQ-based fake RF driver for I/Q over IPC/network  
+```
+for f in /sys/devices/system/cpu/cpu[0-9]*/cpufreq/scaling_governor ; do
+	echo performance > $f
+done
+```
 
-srsUE Features
---------------
+> Not disabling CPU frequency scaling might lead to performance issues
 
- * FDD and TDD configuration
- * Carrier Aggregation support
- * Cell search and synchronization procedure for the UE
- * Soft USIM supporting Milenage and XOR authentication
- * Hard USIM support using PCSC framework
- * Virtual network interface *tun_srsue* created upon network attach
- * QoS support
- * 150 Mbps DL in 20 MHz MIMO TM3/TM4 configuration in i7 Quad-Core CPU.
- * 75 Mbps DL in 20 MHz SISO configuration in i7 Quad-Core CPU.
- * 36 Mbps DL in 10 MHz SISO configuration in i5 Dual-Core CPU.
+- Install **USRP Hardward Driver** (UHD):
 
-srsUE has been fully tested and validated with the following network equipment: 
- * Amarisoft LTE100 eNodeB and EPC
- * Nokia FlexiRadio family FSMF system module with 1800MHz FHED radio module and TravelHawk EPC simulator
- * Huawei DBS3900 
- * Octasic Flexicell LTE-FDD NIB
+> Ubuntu 16.04 has access to outdated UHD drivers. Hence we need to use the official PPA by Ettus Research (the company making USRP).
 
-srsENB Features
----------------
+```
+sudo apt-get remove -y uhd
+sudo apt-get remove libuhd-dev libuhd003 uhd-host -y
+sudo apt-add-repository --remove "deb http://files.ettus.com/binaries/uhd/repo/uhd/ubuntu/trusty trusty main"
+sudo add-apt-repository ppa:ettusresearch/uhd -y
+sudo apt-get update
+sudo apt-get -y --allow-unauthenticated install python python-tk libboost-all-dev libusb-1.0-0-dev
+sudo apt-get -y --allow-unauthenticated install libuhd-dev libuhd003 uhd-host
+```
 
- * FDD configuration
- * Round Robin MAC scheduler with FAPI-like C++ API
- * SR support
- * Periodic and Aperiodic CQI feedback support
- * Standard S1AP and GTP-U interfaces to the Core Network
- * 150 Mbps DL in 20 MHz MIMO TM3/TM4 with commercial UEs
- * 75 Mbps DL in SISO configuration with commercial UEs
- * 50 Mbps UL in 20 MHz with commercial UEs
- * User-plane encryption
+- Install the required packages for `srsLTE-modified`:
 
-srsENB has been tested and validated with the following handsets:
- * LG Nexus 5 and 4
- * Motorola Moto G4 plus and G5
- * Huawei P9/P9lite, P10/P10lite, P20/P20lite
- * Huawei dongles: E3276 and E398
-
-srsEPC Features
----------------
-
- * Single binary, light-weight LTE EPC implementation with:
-   * MME (Mobility Management Entity) with standard S1AP and GTP-U interface to eNB
-   * S/P-GW with standard SGi exposed as virtual network interface (TUN device)
-   * HSS (Home Subscriber Server) with configurable user database in CSV format
- * Support for paging
-
-Hardware
---------
-
-The library currently supports the Ettus Universal Hardware Driver (UHD) and the bladeRF driver. Thus, any hardware supported by UHD or bladeRF can be used. There is no sampling rate conversion, therefore the hardware should support 30.72 MHz clock in order to work correctly with LTE sampling frequencies and decode signals from live LTE base stations. 
-
-We have tested the following hardware: 
- * USRP B210
- * USRP B205mini
- * USRP X300 (recommended UHD version: 3.9.7)
- * limeSDR
- * bladeRF
-
-Build Instructions
-------------------
-
-* Mandatory requirements: 
-  * Common:
-    * cmake              https://cmake.org/
-    * libfftw            http://www.fftw.org/
-    * PolarSSL/mbedTLS   https://tls.mbed.org
-  * srsUE:
-    * Boost:             http://www.boost.org
-  * srsENB:
-    * Boost:             http://www.boost.org
-    * lksctp:            http://lksctp.sourceforge.net/
-    * config:            http://www.hyperrealm.com/libconfig/
-  * srsEPC:
-    * Boost:             http://www.boost.org
-    * lksctp:            http://lksctp.sourceforge.net/
-    * config:            http://www.hyperrealm.com/libconfig/
-
-For example, on Ubuntu 17.04, one can install the required libraries with:
 ```
 sudo apt-get install cmake libfftw3-dev libmbedtls-dev libboost-program-options-dev libconfig++-dev libsctp-dev
 ```
-or on Fedora:
+
+- Download, build and install `srsLTE-modified`:
+
 ```
-dnf install cmake fftw3-devel polarssl-devel lksctp-tools-devel libconfig-devel boost-devel
-```
-
-Note that depending on your flavor and version of Linux, the actual package names may be different.
-
-* Optional requirements: 
-  * srsgui:              https://github.com/srslte/srsgui - for real-time plotting.
-  * libpcsclite-dev:     https://pcsclite.apdu.fr/ - for accessing smart card readers
-
-* RF front-end driver:
-  * UHD:                 https://github.com/EttusResearch/uhd
-  * SoapySDR:            https://github.com/pothosware/SoapySDR
-  * BladeRF:             https://github.com/Nuand/bladeRF
-  * ZeroMQ:              https://github.com/zeromq
-
-Download and build srsLTE: 
-```
-git clone https://github.com/srsLTE/srsLTE.git
-cd srsLTE
+git clone https://github.com/arthurgassner/srsLTE-modified.git
+cd srsLTE-modified
 mkdir build
 cd build
 cmake ../
 make
 make test
-```
-
-Install srsLTE:
-
-```
 sudo make install
-srslte_install_configs.sh user
+sudo ldconfig
 ```
 
-This installs srsLTE and also copies the default srsLTE config files to
-the user's home directory (~/.config/srslte).
+---
+# How to execute
+
+- Connect the **Software-Defined Radio** (in our case the [USRP B200mini](https://www.ettus.com/all-products/usrp-b200mini/)) by USB 3.0 to the computer running the srsLTE-modified software
+> Using USB 2.0 might cause speed issues, so don't do that
+
+- Connect the **PC/SC reader** (in our case the [HID OMNIKEY 3121](https://www.hidglobal.com/products/readers/omnikey/3121)) by USB to the computer running the srsLTE-modified software
+> - To install a smartcard on Linux, simply run `sudo apt install pcscd` (follow [this](http://wiki.infonotary.com/index.php/Installation_of_smart_card_reader_and_smart_card_drivers_in_Linux) if you run into issues)
+> - To make sure that the PC/SC reader is recognized, run `pcsc_scan`. To install it, run `sudo apt install pcsc-tools`
+
+- Plug in the **Swisscom SIM card** (with [PIN deactivated](https://support.myxplora.com/hc/en-gb/articles/360003363353-How-to-deactivate-the-PIN-code-of-your-SIM-card)) in the PC/SC reader
+> It has to be a Swisscom SIM card, as we want to connect to a Swisscom eNodeB. If it isn't a Swisscom SIM card, the SIM's IMSI won't be found in the Swisscom HSS, and the connection won't be allowed.
+
+- Go to `srsue/` and run
+	```
+	sudo srsue ue.conf
+	```
+![](doc/img/srsue.gif)
+
+> The first time running the above command, you might be prompted to run `sudo /usr/lib/uhd/utils/uhd_images_downloader.py` to download packages required to connect to the USRP Software-Defined Radio.
+
+---
+
+## CSI
+
+- The `ce` array (located in `srsLTE/lib/src/phy/ch_estimation/chest_dl.c`) might contain the channel estimation (i.e. the channel frequency response).
+	- The function `srslte_chest_dl_estimate_cfg(...)` is called by the function `estimate_pdcch_pcfich(...)` (located in `lib/src/phy/ue/ue_dl.c`). According to *Innovations, Telesystem. ”LTE in a Nutshell.” White paper (2010). pp.11-12*, channel estimation is performed in the **PDCCH** (Physical Downlink Control Channel), which supports the idea that `ce` contains the channel estimate.
+
+	- The `ce` array is a 3D array of complex floats of dimension (#ports) x (#Rx antennas) x (#subcarriers).
+
+	- It seems that `ce` contains the channel estimates for *all* subcarriers, not just the ones carrying *Cell-Specific Reference Signals* (CRS). The channel estimate of non-CRS-carrying subcarriers is estimated through interpolation of the channel estimates of CRS-carrying subcarriers. This is supported by the comment at the head of the `chest_dl.c` file:
+	> Estimates the channel in the resource elements transmitting references and interpolates for the rest of the resource grid
+
+	- The `ce` array can be saved to a file by modifying the `estimate_pdcch_pcfich(...)` function. This function is called every ms. Below is a plot of its amplitude over each subcarrier. The shape and overall aspect is in concordance with what can be seen in CSI-related papers for WiFi.
+
+	![](doc/img/channel_estimate_example.png)
 
 
-Execution Instructions
-----------------------
 
-The srsUE, srsENB and srsEPC applications include example configuration files
-that should be copied (manually or by using the convenience script) and modified,
-if needed, to meet the system configuration.
-On many systems they should work out of the box.
+- The `h_freq` array (located in `srsLTE/lib/src/phy/channel/fading.h`) might contain the channel frequency response.
+	- Indeed, `srsLTE/lib/src/phy/channel/fading.c` contains the comment `// at this stage, q->h_freq should contain the frequency response`.
 
-By default, all applications will search for config files in the user's home
-directory (~/.config/srslte) upon startup.
+	- Additionally, `q->h_freq` is an array of complex floats (i.e. exactly what the channel frequency response would be).
 
-Note that you have to execute the applications with root privileges to enable
-real-time thread priorities and to permit creation of virtual network interfaces.
+	- The function `generate_taps(...)` (defined in `lib/src/phy/channel/fading.c`) seems to populate the `q->h_freq` array.
 
-srsENB and srsEPC can run on the same machine as a network-in-the-box configuration.
-srsUE needs to run on a separate machine.
+	- `generate_taps(...)` is called by the function `srslte_channel_fading_execute(...)` (defined in `lib/src/phy/channel/fading.c`)
 
-If you have installed the software suite using ```sudo make install``` and
-have installed the example config files using ```srslte_install_configs.sh user```,
-you may just start all applications with their default parameters.
+	- `srslte_channel_fading_execute(...)` is called by the function `channel::run(...)` (defined in `lib/src/phy/channel/channel.cc`).
 
-### srsEPC
+	- The file `channel.cc` has access to a logger (`log_h`) and calls it once (`log_h->debug(...)`). This could be use to write the content of `h_freq` before it's deleted.
 
-On machine 1, run srsEPC as follows:
+	- The function `void srslte_channel_fading_free(srslte_channel_fading_t* q)` (defined in `lib/src/phy/channel/fading.c`) frees the memory allocated for `q`, which itself holds the array `h_freq`. We hence need to access `h_freq` before `srslte_channel_fading_free(...)` is called.
+
+	- I think that the `h_freq` array contains the channel frequency response, but simulated. Indeed, one has to enable (`channel.dl.enable`) the **downlink channel emulator** in the `ue.conf` file for the function `channel::run(...)` (located in `lib/src/phy/channel/channel.cc`) to be run. Once run, `channel::run(...)` calls `srslte\_channel\_fading\_execute(...)`, which calls `generate\_taps(...)`, which populates `q->h_freq`.
+
+	- As per the **channel emulator**'s [Wikipedia article](https://en.wikipedia.org/wiki/Radio_channel_emulator):
+	> In a test environment, radio channel emulators replace the real-world radio channel between a radio transmitter and a receiver by providing a faded representation of a transmitted signal to the receiver inputs.
+
+## Other features (RSSI, RSRQ, SNR, ...)
+
+- We can exploit the function `estimate_pdcch_pcfich(...)` (located in `lib/src/phy/ue/ue_dl.c`). It calls `srslte_chest_dl_estimate_cfg(...)` and populate a `srslte_chest_dl_res_t` struct. This struct contains the RSSI, RSRQ, RSRP, SNR, CFO for the currently connected eNodeB. We can save the content of that struct from there. Below is a picture of those measurements through time.
+
+	![](doc/img/other_features_example.png)
+
+---
+
+# Common issues
+
+- Running `make` when building `srsLTE-modified` might give you the following error:
 
 ```
-sudo srsepc
+[ 52%] Linking CXX executable pss_usrp
+//usr/lib/x86_64-linux-gnu/libSM.so.6: undefined reference to `uuid_unparse_lower@UUID_1.0'
+//usr/lib/x86_64-linux-gnu/libSM.so.6: undefined reference to `uuid_generate@UUID_1.0'
+collect2: error: ld returned 1 exit status
+lib/src/phy/sync/test/CMakeFiles/pss_usrp.dir/build.make:102: recipe for target 'lib/src/phy/sync/test/pss_usrp' failed
+make[2]: *** [lib/src/phy/sync/test/pss_usrp] Error 1
+CMakeFiles/Makefile2:3830: recipe for target 'lib/src/phy/sync/test/CMakeFiles/pss_usrp.dir/all' failed
+make[1]: *** [lib/src/phy/sync/test/CMakeFiles/pss_usrp.dir/all] Error 2
+Makefile:160: recipe for target 'all' failed
+make: *** [all] Error 2
 ```
 
-Using the default configuration, this creates a virtual network interface
-named "srs_spgw_sgi" on machine 1 with IP 172.16.0.1. All connected UEs
-will be assigned an IP in this network.
-
-### srsENB
-
-Also on machine 1, but in another console, run srsENB as follows:
-
-```
-sudo srsenb
-```
-
-### srsUE
-
-On machine 2, run srsUE as follows:
-
-```
-sudo srsue
-```
-
-Using the default configuration, this creates a virtual network interface
-named "tun_srsue" on machine 2 with an IP in the network 172.16.0.x.
-Assuming the UE has been assigned IP 172.16.0.2, you may now exchange
-IP traffic with machine 1 over the LTE link. For example, run a ping to 
-the default SGi IP address:
-
-```
-ping 172.16.0.1
-```
-
-Support
-========
-
-Mailing list: http://www.softwareradiosystems.com/mailman/listinfo/srslte-users
+To fix it, follow [these instructions](https://github.com/piyushrpt/condaLinuxSetup/blob/master/issues.md).

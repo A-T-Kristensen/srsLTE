@@ -1,13 +1,13 @@
-srsLTE-modified
+srsLTE
 =====
 
-Modified version of the [srsLTE software](https://github.com/srsLTE/srsLTE) in order to extract the channel frequency response estimate (i.e. the CSI), as well as other features (RSSI, RSRQ, ...)
+Fork of the [srsLTE software](https://github.com/srsLTE/srsLTE) slightly modified to extract the *channel estimate* (i.e. the **Channel State Information** (CSI)), as well as other features (RSSI, RSRQ, ...)
 
 ---
 
 # How to install
 
-Tried with Ubuntu 16.04 and CMake 3.5.1
+Tried with Ubuntu 18.04 and CMake 3.5.1
 
 - Disable CPU frequency scaling:
 
@@ -21,7 +21,7 @@ done
 
 - Install **USRP Hardward Driver** (UHD):
 
-> Ubuntu 16.04 has access to outdated UHD drivers. Hence we need to use the official PPA by Ettus Research (the company making USRP).
+> Ubuntu 18.04 has access to outdated UHD drivers. Hence we need to use the official PPA by Ettus Research (the company making USRP).
 
 ```
 sudo apt-get remove -y uhd
@@ -33,16 +33,16 @@ sudo apt-get -y --allow-unauthenticated install python python-tk libboost-all-de
 sudo apt-get -y --allow-unauthenticated install libuhd-dev libuhd003 uhd-host
 ```
 
-- Install the required packages for `srsLTE-modified`:
+- Install the required packages for this fork of `srsLTE`:
 
 ```
 sudo apt-get install cmake libfftw3-dev libmbedtls-dev libboost-program-options-dev libconfig++-dev libsctp-dev
 ```
 
-- Download, build and install `srsLTE-modified`:
+- Download, build and install this fork of `srsLTE`:
 
 ```
-git clone https://github.com/arthurgassner/srsLTE-modified.git
+git clone https://github.com/arthurgassner/srsLTE.git
 cd srsLTE-modified
 mkdir build
 cd build
@@ -76,9 +76,9 @@ sudo ldconfig
 
 ---
 
-## CSI
+## Explanation
 
-- The `ce` array (located in `srsLTE/lib/src/phy/ch_estimation/chest_dl.c`) might contain the channel estimation (i.e. the channel frequency response).
+- The `ce` array (located in `srsLTE/lib/src/phy/ch_estimation/chest_dl.c`) should contain the channel estimate (i.e. the CSI).
 	- The function `srslte_chest_dl_estimate_cfg(...)` is called by the function `estimate_pdcch_pcfich(...)` (located in `lib/src/phy/ue/ue_dl.c`). According to *Innovations, Telesystem. ”LTE in a Nutshell.” White paper (2010). pp.11-12*, channel estimation is performed in the **PDCCH** (Physical Downlink Control Channel), which supports the idea that `ce` contains the channel estimate.
 
 	- The `ce` array is a 3D array of complex floats of dimension (#ports) x (#Rx antennas) x (#subcarriers).
@@ -91,30 +91,9 @@ sudo ldconfig
 	![](doc/img/channel_estimate_example.png)
 
 
-
-- The `h_freq` array (located in `srsLTE/lib/src/phy/channel/fading.h`) might contain the channel frequency response.
-	- Indeed, `srsLTE/lib/src/phy/channel/fading.c` contains the comment `// at this stage, q->h_freq should contain the frequency response`.
-
-	- Additionally, `q->h_freq` is an array of complex floats (i.e. exactly what the channel frequency response would be).
-
-	- The function `generate_taps(...)` (defined in `lib/src/phy/channel/fading.c`) seems to populate the `q->h_freq` array.
-
-	- `generate_taps(...)` is called by the function `srslte_channel_fading_execute(...)` (defined in `lib/src/phy/channel/fading.c`)
-
-	- `srslte_channel_fading_execute(...)` is called by the function `channel::run(...)` (defined in `lib/src/phy/channel/channel.cc`).
-
-	- The file `channel.cc` has access to a logger (`log_h`) and calls it once (`log_h->debug(...)`). This could be use to write the content of `h_freq` before it's deleted.
-
-	- The function `void srslte_channel_fading_free(srslte_channel_fading_t* q)` (defined in `lib/src/phy/channel/fading.c`) frees the memory allocated for `q`, which itself holds the array `h_freq`. We hence need to access `h_freq` before `srslte_channel_fading_free(...)` is called.
-
-	- I think that the `h_freq` array contains the channel frequency response, but simulated. Indeed, one has to enable (`channel.dl.enable`) the **downlink channel emulator** in the `ue.conf` file for the function `channel::run(...)` (located in `lib/src/phy/channel/channel.cc`) to be run. Once run, `channel::run(...)` calls `srslte\_channel\_fading\_execute(...)`, which calls `generate\_taps(...)`, which populates `q->h_freq`.
-
-	- As per the **channel emulator**'s [Wikipedia article](https://en.wikipedia.org/wiki/Radio_channel_emulator):
-	> In a test environment, radio channel emulators replace the real-world radio channel between a radio transmitter and a receiver by providing a faded representation of a transmitted signal to the receiver inputs.
-
 ## Other features (RSSI, RSRQ, SNR, ...)
 
-- We can exploit the function `estimate_pdcch_pcfich(...)` (located in `lib/src/phy/ue/ue_dl.c`). It calls `srslte_chest_dl_estimate_cfg(...)` and populate a `srslte_chest_dl_res_t` struct. This struct contains the RSSI, RSRQ, RSRP, SNR, CFO for the currently connected eNodeB. We can save the content of that struct from there. Below is a picture of those measurements through time.
+- We can exploit the function `estimate_pdcch_pcfich(...)` (located in `lib/src/phy/ue/ue_dl.c`). It calls `srslte_chest_dl_estimate_cfg(...)` and populate a `srslte_chest_dl_res_t` `struct`. This `struct` contains the RSSI, RSRQ, RSRP, SNR, CFO for the currently connected eNodeB. We can save the content of that `struct` from there. Below is a picture of those measurements through time.
 
 	![](doc/img/other_features_example.png)
 

@@ -54,7 +54,13 @@ sudo ldconfig
 ```
 
 ---
-# How to execute
+# How to setup 
+
+- Edit the configuration file governing the connection to eNodeBs (i.e. `srsue/ue.conf`) so that you can connect to the eNodeB you wish to connect to 
+> Typically, you just have to change the field `dl_earfcn`
+
+---
+# How to run
 
 - Connect the **Software-Defined Radio** (in our case the [USRP B200mini](https://www.ettus.com/all-products/usrp-b200mini/)) by USB 3.0 to the computer running the srsLTE-modified software
 > Using USB 2.0 might cause speed issues, so don't do that
@@ -63,8 +69,8 @@ sudo ldconfig
 > - To install a smartcard on Linux, simply run `sudo apt install pcscd` (follow [this](http://wiki.infonotary.com/index.php/Installation_of_smart_card_reader_and_smart_card_drivers_in_Linux) if you run into issues)
 > - To make sure that the PC/SC reader is recognized, run `pcsc_scan`. To install it, run `sudo apt install pcsc-tools`
 
-- Plug in the **Swisscom SIM card** (with [PIN deactivated](https://support.myxplora.com/hc/en-gb/articles/360003363353-How-to-deactivate-the-PIN-code-of-your-SIM-card)) in the PC/SC reader
-> It has to be a Swisscom SIM card, as we want to connect to a Swisscom eNodeB. If it isn't a Swisscom SIM card, the SIM's IMSI won't be found in the Swisscom HSS, and the connection won't be allowed.
+- Plug in the **SIM card** (with [PIN deactivated](https://support.myxplora.com/hc/en-gb/articles/360003363353-How-to-deactivate-the-PIN-code-of-your-SIM-card)) in the PC/SC reader
+> It has to be a SIM card allowing you to connect to the eNodeB that you want to connect to. If you're unsure of whether you can connect to the expected eNodeB, first try with a phone.
 
 - Go to `srsue/` and run
 	```

@@ -5,7 +5,7 @@ Fork of the [srsLTE software](https://github.com/srsLTE/srsLTE) slightly modifie
 
 ---
 
-# How to install
+## How to install
 
 Tried with Ubuntu 18.04 and CMake 3.5.1
 
@@ -54,13 +54,13 @@ sudo ldconfig
 ```
 
 ---
-# How to setup 
+## How to setup 
 
 - Edit the configuration file governing the connection to eNodeBs (i.e. `srsue/ue.conf`) so that you can connect to the eNodeB you wish to connect to 
 > Typically, you just have to change the field `dl_earfcn`
 
 ---
-# How to run
+## How to run
 
 - Connect the **Software-Defined Radio** (in our case the [USRP B200mini](https://www.ettus.com/all-products/usrp-b200mini/)) by USB 3.0 to the computer running the srsLTE-modified software
 > Using USB 2.0 might cause speed issues, so don't do that
@@ -82,12 +82,12 @@ sudo ldconfig
 
 ---
 
-## Explanation
+### Explanation
 
 - The `ce` array (located in `srsLTE/lib/src/phy/ch_estimation/chest_dl.c`) should contain the channel estimate (i.e. the CSI).
 	- The function `srslte_chest_dl_estimate_cfg(...)` is called by the function `estimate_pdcch_pcfich(...)` (located in `lib/src/phy/ue/ue_dl.c`). According to *Innovations, Telesystem. ”LTE in a Nutshell.” White paper (2010). pp.11-12*, channel estimation is performed in the **PDCCH** (Physical Downlink Control Channel), which supports the idea that `ce` contains the channel estimate.
 
-	- The `ce` array is a 3D array of complex floats of dimension (#ports) x (#Rx antennas) x (#subcarriers).
+	- The `ce` array is a 3D array of complex floats of dimension (##ports) x (##Rx antennas) x (#subcarriers).
 
 	- It seems that `ce` contains the channel estimates for *all* subcarriers, not just the ones carrying *Cell-Specific Reference Signals* (CRS). The channel estimate of non-CRS-carrying subcarriers is estimated through interpolation of the channel estimates of CRS-carrying subcarriers. This is supported by the comment at the head of the `chest_dl.c` file:
 	> Estimates the channel in the resource elements transmitting references and interpolates for the rest of the resource grid
@@ -97,7 +97,7 @@ sudo ldconfig
 	![](doc/img/channel_estimate_example.png)
 
 
-## Other features (RSSI, RSRQ, SNR, ...)
+### Other features (RSSI, RSRQ, SNR, ...)
 
 - We can exploit the function `estimate_pdcch_pcfich(...)` (located in `lib/src/phy/ue/ue_dl.c`). It calls `srslte_chest_dl_estimate_cfg(...)` and populate a `srslte_chest_dl_res_t` `struct`. This `struct` contains the RSSI, RSRQ, RSRP, SNR, CFO for the currently connected eNodeB. We can save the content of that `struct` from there. Below is a picture of those measurements through time.
 
@@ -105,7 +105,7 @@ sudo ldconfig
 
 ---
 
-# Common issues
+## Common issues
 
 - Running `make` when building `srsLTE-modified` might give you the following error:
 

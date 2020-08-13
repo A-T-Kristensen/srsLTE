@@ -9,7 +9,7 @@ Fork of the [srsLTE software](https://github.com/srsLTE/srsLTE) slightly modifie
 
 Tried with Ubuntu 18.04 and CMake 3.5.1
 
-- Disable CPU frequency scaling:
+1. Disable CPU frequency scaling:
 
 ```
 for f in /sys/devices/system/cpu/cpu[0-9]*/cpufreq/scaling_governor ; do
@@ -19,7 +19,7 @@ done
 
 > Not disabling CPU frequency scaling might lead to performance issues
 
-- Install **USRP Hardward Driver** (UHD):
+2. Install **USRP Hardward Driver** (UHD):
 
 > Ubuntu 18.04 has access to outdated UHD drivers. Hence we need to use the official PPA by Ettus Research (the company making USRP).
 
@@ -33,13 +33,13 @@ sudo apt-get -y --allow-unauthenticated install python python-tk libboost-all-de
 sudo apt-get -y --allow-unauthenticated install libuhd-dev libuhd003 uhd-host
 ```
 
-- Install the required packages for this fork of `srsLTE`:
+3. Install the required packages for this fork of `srsLTE`:
 
 ```
 sudo apt-get install cmake libfftw3-dev libmbedtls-dev libboost-program-options-dev libconfig++-dev libsctp-dev
 ```
 
-- Download, build and install this fork of `srsLTE`:
+4. Download, build and install this fork of `srsLTE`:
 
 ```
 git clone https://github.com/arthurgassner/srsLTE.git
@@ -56,23 +56,23 @@ sudo ldconfig
 ---
 ## How to setup 
 
-- Edit the configuration file governing the connection to eNodeBs (i.e. `srsue/ue.conf`) so that you can connect to the eNodeB you wish to connect to 
+1. Edit the configuration file governing the connection to eNodeBs (i.e. `srsue/ue.conf`) so that you can connect to the eNodeB you wish to connect to 
 > Typically, you just have to change the field `dl_earfcn`
 
 ---
 ## How to run
 
-- Connect the **Software-Defined Radio** (in our case the [USRP B200mini](https://www.ettus.com/all-products/usrp-b200mini/)) by USB 3.0 to the computer running the srsLTE-modified software
+1. Connect the **Software-Defined Radio** (in our case the [USRP B200mini](https://www.ettus.com/all-products/usrp-b200mini/)) by USB 3.0 to the computer running the srsLTE-modified software
 > Using USB 2.0 might cause speed issues, so don't do that
 
-- Connect the **PC/SC reader** (in our case the [HID OMNIKEY 3121](https://www.hidglobal.com/products/readers/omnikey/3121)) by USB to the computer running the srsLTE-modified software
+2. Connect the **PC/SC reader** (in our case the [HID OMNIKEY 3121](https://www.hidglobal.com/products/readers/omnikey/3121)) by USB to the computer running the srsLTE-modified software
 > - To install a smartcard on Linux, simply run `sudo apt install pcscd` (follow [this](http://wiki.infonotary.com/index.php/Installation_of_smart_card_reader_and_smart_card_drivers_in_Linux) if you run into issues)
 > - To make sure that the PC/SC reader is recognized, run `pcsc_scan`. To install it, run `sudo apt install pcsc-tools`
 
-- Plug in the **SIM card** (with [PIN deactivated](https://support.myxplora.com/hc/en-gb/articles/360003363353-How-to-deactivate-the-PIN-code-of-your-SIM-card)) in the PC/SC reader
+3. Plug in the **SIM card** (with [PIN deactivated](https://support.myxplora.com/hc/en-gb/articles/360003363353-How-to-deactivate-the-PIN-code-of-your-SIM-card)) in the PC/SC reader
 > It has to be a SIM card allowing you to connect to the eNodeB that you want to connect to. If you're unsure of whether you can connect to the expected eNodeB, first try with a phone.
 
-- Go to `srsue/` and run
+4. Go to `srsue/` and run
 	```
 	sudo srsue ue.conf
 	```
